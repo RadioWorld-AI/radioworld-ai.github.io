@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RadioWorld: Transferring World Models to Radio-Frequency Radiance Fields</title>
+  <meta name="description" content="RadioWorld synthesizes RF radiance fields from 3D scene geometry and transceiver locations, without reference RF measurements.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="nav">
+    <a href="#top" aria-label="Back to top">
+      <img src="assets/logo.png" alt="The Hong Kong Polytechnic University">
+    </a>
+    <nav>
+      <a href="#method">Method</a>
+      <a href="#results">Results</a>
+      <a href="#visualization">Visualization</a>
+      <a href="#citation">Citation</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <h1>RadioWorld</h1>
+      <p class="subtitle">Transferring World Models to Radio-Frequency Radiance Fields</p>
+      <p class="authors">
+        Hu Zhou<sup>1</sup>,
+        Jiazhou Zhou<sup>2</sup>,
+        Shuowen Zhang<sup>1</sup>,
+        Ying-Chang Liang<sup>3</sup>,
+        Liang Liu<sup>1</sup>
+      </p>
+      <p class="affil">
+        <sup>1</sup>The Hong Kong Polytechnic University
+        &nbsp;&nbsp;<sup>2</sup>The Hong Kong University of Science and Technology (Guangzhou)
+        &nbsp;&nbsp;<sup>3</sup>University of Electronic Science and Technology of China
+      </p>
+      <p class="lead">
+        RadioWorld adapts a pretrained world model to synthesize radio-frequency radiance fields directly from 3D scene geometry and transceiver locations, without any reference RF measurements at inference.
+      </p>
+      <div class="actions">
+        <!-- Replace href with the arXiv URL after the paper is uploaded. -->
+        <a class="btn" href="paper.pdf">Paper</a>
+        <span class="btn disabled" aria-disabled="true">Code <small>Coming soon</small></span>
+        <span class="btn disabled" aria-disabled="true">Model <small>Coming soon</small></span>
+        <span class="btn disabled" aria-disabled="true">Data <small>Coming soon</small></span>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <section class="panel">
+        <img src="assets/teaser.png" alt="RadioWorld takes a 3D scene and transceiver locations and synthesizes multi-height RSSMs and bidirectional SSDs for coverage planning and beamforming.">
+        <p class="caption">RadioWorld synthesizes received signal strength maps at different heights and spatial spectrum diagrams at arbitrary locations from scene geometry and transceiver locations.</p>
+      </section>
+
+      <section id="method">
+        <h2>Method</h2>
+        <p class="section-lead">A dual-stream Mixture-of-Transformers turns a pretrained world model into a feed-forward RF field synthesizer. One stream understands the wireless environment. The other generates the radio field.</p>
+        <div class="grid">
+          <article class="note">
+            <h3>Scene-Understanding Transformer</h3>
+            <p>Encodes a bird’s-eye view of building occupancy, height, and transceiver locations into environment-aware electromagnetic propagation features. The same stream can also describe a link in text, including line-of-sight and the dominant arrival and departure directions.</p>
+          </article>
+          <article class="note">
+            <h3>Field-Generation Transformer</h3>
+            <p>Attends to those features at every layer and synthesizes the requested field from local conditions: a planar slice for a multi-height RSSM, or a spherical panorama for bidirectional SSDs. Because RSSM and SSD in a fixed scene are deterministic, multi-step flow matching is replaced by a single-step readout.</p>
+          </article>
+        </div>
+        <div class="panel">
+          <img src="assets/overview.png" alt="Diagram of the dual-stream RadioWorld architecture, with a scene-understanding transformer and a field-generation transformer.">
+          <p class="caption">The understanding stream keeps causal self-attention. The generation stream uses full attention over scene features, geometric conditions, coordinates, and learnable queries.</p>
+        </div>
+      </section>
+
+      <section id="results">
+        <h2>Results</h2>
+        <p class="section-lead">On UrbanRF-Bench, 657 scenes and 32,850 radiance fields across seven cities, RadioWorld is evaluated zero-shot in Beijing and Washington. RSSM baselines are retrained on the five training cities. SSD baselines receive 500 reference measurements per scene. RadioWorld uses zero reference measurements.</p>
+
+        <div class="table-card">
+          <h3>Zero-shot RSSM on all 38,200 unseen maps</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Height</th>
+                <th>NMSE ↓</th>
+                <th>RMSE ↓</th>
+                <th>PSNR ↑</th>
+                <th>SSIM ↑</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="method" rowspan="5">RadioUNet</td>
+                <td>1.5 m</td><td>0.0477</td><td>0.1102</td><td>20.10</td><td>0.6976</td>
+              </tr>
+              <tr><td>10 m</td><td>0.0385</td><td>0.1006</td><td>21.06</td><td>0.7126</td></tr>
+              <tr><td>20 m</td><td>0.0556</td><td>0.1149</td><td>20.06</td><td>0.6667</td></tr>
+              <tr><td>30 m</td><td>0.0285</td><td>0.0800</td><td>23.91</td><td>0.9380</td></tr>
+              <tr><td>All</td><td>0.0426</td><td>0.1014</td><td>21.28</td><td>0.7537</td></tr>
+              <tr>
+                <td class="method" rowspan="5">RadioDiff</td>
+                <td>1.5 m</td><td>0.0369</td><td>0.0992</td><td>21.15</td><td>0.6916</td>
+              </tr>
+              <tr><td>10 m</td><td>0.0336</td><td>0.0958</td><td>21.58</td><td>0.7026</td></tr>
+              <tr><td>20 m</td><td>0.0615</td><td>0.1383</td><td>18.29</td><td>0.5246</td></tr>
+              <tr><td>30 m</td><td>0.0201</td><td>0.0686</td><td>25.68</td><td>0.9373</td></tr>
+              <tr><td>All</td><td>0.0380</td><td>0.1005</td><td>21.68</td><td>0.7140</td></tr>
+              <tr>
+                <td class="method" rowspan="5">RadioMamba</td>
+                <td>1.5 m</td><td>0.0361</td><td>0.0966</td><td>21.38</td><td>0.7193</td>
+              </tr>
+              <tr><td>10 m</td><td>0.0285</td><td>0.0867</td><td>22.57</td><td>0.7337</td></tr>
+              <tr><td>20 m</td><td>0.0392</td><td>0.1002</td><td>21.36</td><td><strong>0.6680</strong></td></tr>
+              <tr><td>30 m</td><td>0.0189</td><td>0.0633</td><td>26.70</td><td>0.9416</td></tr>
+              <tr><td>All</td><td>0.0307</td><td>0.0867</td><td>23.00</td><td>0.7657</td></tr>
+              <tr class="ours">
+                <td class="method" rowspan="5">RadioWorld</td>
+                <td>1.5 m</td><td><strong>0.0250</strong></td><td><strong>0.0785</strong></td><td><strong>23.35</strong></td><td><strong>0.7259</strong></td>
+              </tr>
+              <tr class="ours"><td>10 m</td><td><strong>0.0159</strong></td><td><strong>0.0641</strong></td><td><strong>25.14</strong></td><td><strong>0.7459</strong></td></tr>
+              <tr class="ours"><td>20 m</td><td><strong>0.0242</strong></td><td><strong>0.0775</strong></td><td><strong>23.85</strong></td><td>0.6661</td></tr>
+              <tr class="ours"><td>30 m</td><td><strong>0.0081</strong></td><td><strong>0.0368</strong></td><td><strong>31.25</strong></td><td><strong>0.9471</strong></td></tr>
+              <tr class="ours"><td>All</td><td><strong>0.0183</strong></td><td><strong>0.0642</strong></td><td><strong>25.90</strong></td><td><strong>0.7712</strong></td></tr>
+            </tbody>
+          </table>
+          <p class="caption">NMSE, RMSE, PSNR, and SSIM at every query height. Bold marks the best value. Beijing and Washington, 191 scenes × 50 transmitters × 4 heights.</p>
+        </div>
+
+        <div class="table-card">
+          <h3>SSD synthesis by distance outside the reference region</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Region (distance outside reference circle)</th>
+                <th>NMSE ↓</th>
+                <th>RMSE ↓</th>
+                <th>PSNR ↑</th>
+                <th>SSIM ↑</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="group"><td colspan="6">Per-scene, with reference SSD measurements</td></tr>
+              <tr>
+                <td class="method" rowspan="6">NeRF<sup>2</sup></td>
+                <td>Region 1 (2 m)</td><td>0.1505</td><td>0.1904</td><td>15.50</td><td>0.5775</td>
+              </tr>
+              <tr><td>Region 2 (5 m)</td><td>0.2783</td><td>0.2522</td><td>13.01</td><td>0.4995</td></tr>
+              <tr><td>Region 3 (10 m)</td><td>0.2510</td><td>0.2612</td><td>12.38</td><td>0.4343</td></tr>
+              <tr><td>Region 4 (30 m)</td><td>0.8829</td><td>0.5378</td><td>5.69</td><td>0.2138</td></tr>
+              <tr><td>Region 5 (50 m)</td><td>0.7078</td><td>0.4640</td><td>7.05</td><td>0.2347</td></tr>
+              <tr><td>All</td><td>0.4554</td><td>0.3416</td><td>10.72</td><td>0.3917</td></tr>
+              <tr>
+                <td class="method" rowspan="6">WRF-GS+</td>
+                <td>Region 1 (2 m)</td><td>0.0685</td><td>0.1281</td><td><strong>19.35</strong></td><td>0.6756</td>
+              </tr>
+              <tr><td>Region 2 (5 m)</td><td>0.0894</td><td>0.1570</td><td>16.69</td><td>0.6058</td></tr>
+              <tr><td>Region 3 (10 m)</td><td>0.1106</td><td>0.1909</td><td>14.74</td><td>0.5165</td></tr>
+              <tr><td>Region 4 (30 m)</td><td>0.1345</td><td>0.2158</td><td>13.43</td><td>0.3606</td></tr>
+              <tr><td>Region 5 (50 m)</td><td>0.1815</td><td>0.2487</td><td>12.23</td><td>0.3278</td></tr>
+              <tr><td>All</td><td>0.1169</td><td>0.1881</td><td>15.29</td><td>0.4971</td></tr>
+              <tr>
+                <td class="method" rowspan="6">GSRF</td>
+                <td>Region 1 (2 m)</td><td>0.3449</td><td>0.3210</td><td>10.12</td><td>0.3715</td>
+              </tr>
+              <tr><td>Region 2 (5 m)</td><td>0.6736</td><td>0.4601</td><td>6.81</td><td>0.1882</td></tr>
+              <tr><td>Region 3 (10 m)</td><td>0.8395</td><td>0.5376</td><td>5.47</td><td>0.0943</td></tr>
+              <tr><td>Region 4 (30 m)</td><td>0.9334</td><td>0.5769</td><td>4.80</td><td>0.0453</td></tr>
+              <tr><td>Region 5 (50 m)</td><td>0.9409</td><td>0.5725</td><td>4.87</td><td>0.0395</td></tr>
+              <tr><td>All</td><td>0.7459</td><td>0.4933</td><td>6.42</td><td>0.1481</td></tr>
+              <tr class="group"><td colspan="6">Cross-scene, with reference SSD measurements</td></tr>
+              <tr>
+                <td class="method" rowspan="6">GRaF</td>
+                <td>Region 1 (2 m)</td><td>0.0769</td><td>0.1428</td><td>17.53</td><td><strong>0.7143</strong></td>
+              </tr>
+              <tr><td>Region 2 (5 m)</td><td>0.0850</td><td>0.1537</td><td>16.69</td><td>0.6782</td></tr>
+              <tr><td>Region 3 (10 m)</td><td>0.0975</td><td>0.1765</td><td>15.33</td><td>0.6062</td></tr>
+              <tr><td>Region 4 (30 m)</td><td>0.1125</td><td>0.1987</td><td>14.14</td><td>0.4464</td></tr>
+              <tr><td>Region 5 (50 m)</td><td>0.1603</td><td>0.2341</td><td>12.75</td><td>0.3820</td></tr>
+              <tr><td>All</td><td>0.1065</td><td>0.1812</td><td>15.29</td><td>0.5650</td></tr>
+              <tr class="group"><td colspan="6">Cross-scene, without reference SSD measurements</td></tr>
+              <tr class="ours">
+                <td class="method" rowspan="6">RadioWorld</td>
+                <td>Region 1 (2 m)</td><td><strong>0.0574</strong></td><td><strong>0.1278</strong></td><td>18.27</td><td>0.7122</td>
+              </tr>
+              <tr class="ours"><td>Region 2 (5 m)</td><td><strong>0.0585</strong></td><td><strong>0.1301</strong></td><td><strong>18.08</strong></td><td><strong>0.7035</strong></td></tr>
+              <tr class="ours"><td>Region 3 (10 m)</td><td><strong>0.0529</strong></td><td><strong>0.1280</strong></td><td><strong>18.51</strong></td><td><strong>0.7372</strong></td></tr>
+              <tr class="ours"><td>Region 4 (30 m)</td><td><strong>0.0330</strong></td><td><strong>0.1000</strong></td><td><strong>20.83</strong></td><td><strong>0.8145</strong></td></tr>
+              <tr class="ours"><td>Region 5 (50 m)</td><td><strong>0.0349</strong></td><td><strong>0.0979</strong></td><td><strong>20.99</strong></td><td><strong>0.8133</strong></td></tr>
+              <tr class="ours"><td>All</td><td><strong>0.0473</strong></td><td><strong>0.1167</strong></td><td><strong>19.34</strong></td><td><strong>0.7563</strong></td></tr>
+            </tbody>
+          </table>
+          <p class="caption">Averaged over one held-out scene from Beijing and one from Washington at 2–50 m outside a 40 m-diameter reference circle. Baselines receive 500 reference SSDs per scene; RadioWorld uses none. "All" pools Regions 1–5. Bold marks the best value.</p>
+        </div>
+      </section>
+
+      <section id="visualization">
+        <h2>Visualization</h2>
+        <div class="panel">
+          <img src="assets/rssm.png" alt="RSSM predictions at 1.5, 10, 20, and 30 meters compared with ground truth and radio-map baselines.">
+          <p class="caption">Multi-height RSSMs (1.5 m–30 m) in unseen cities. RadioWorld preserves sharp street-level building shadows and smooth high-altitude propagation.</p>
+        </div>
+        <div class="panel">
+          <img src="assets/ssd.png" alt="SSD predictions at five receivers outside the reference region, compared with measurement-based neural RF fields.">
+          <p class="caption">SSDs at receivers 2–50 m outside the 40 m-diameter reference circle in an unseen Washington scene. RadioWorld preserves the dominant lobes without any reference RF measurements.</p>
+        </div>
+      </section>
+
+      <section id="citation">
+        <h2>Citation</h2>
+        <div class="bib">
+          <pre id="bibtex">@article{zhou2026radioworld,
+  title  = {RadioWorld: Transferring World Models to Radio-Frequency Radiance Fields},
+  author = {Zhou, Hu and Zhou, Jiazhou and Zhang, Shuowen and Liang, Ying-Chang and Liu, Liang},
+  year   = {2026},
+  note   = {Preprint}
+}</pre>
+          <button class="copy" type="button" id="copy">Copy</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>The Hong Kong Polytechnic University</footer>
+
+  <script>
+    document.getElementById("copy").addEventListener("click", async function () {
+      const text = document.getElementById("bibtex").innerText;
+      const button = this;
+      try {
+        await navigator.clipboard.writeText(text);
+        button.textContent = "Copied";
+        button.classList.add("done");
+        setTimeout(function () {
+          button.textContent = "Copy";
+          button.classList.remove("done");
+        }, 1600);
+      } catch (err) {
+        button.textContent = "Select text";
+      }
+    });
+  </script>
+</body>
+</html>
